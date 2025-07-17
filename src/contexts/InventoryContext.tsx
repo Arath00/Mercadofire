@@ -559,6 +559,8 @@ const initialProducts: Product[] = [
     sku: 'ENL-003',
     minStock: 18,
     image: 'https://images.pexels.com/photos/6287334/pexels-photo-6287334.jpeg?auto=compress&cs=tinysrgb&w=400',
+  }
+]
 const initialProducts: Product[] = databaseData.products || [];
 const initialTransactions: InventoryTransaction[] = databaseData.transactions || [];
 
