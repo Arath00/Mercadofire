@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
+import databaseData from '../data/database.json';
 
 // Types
 export interface Category {
@@ -76,19 +77,8 @@ const STORAGE_KEYS = {
   TRANSACTIONS: 'inventory_transactions',
 };
 
-// Initialize with some sample data
-const initialCategories: Category[] = [
-  { id: 'cat-beverages', name: 'Bebidas', description: 'Refrescos, jugos, agua y bebidas calientes' },
-  { id: 'cat-snacks', name: 'Snacks', description: 'Papas, galletas, dulces y botanas' },
-  { id: 'cat-dairy', name: 'Lácteos', description: 'Leche, queso, yogurt y derivados lácteos' },
-  { id: 'cat-bakery', name: 'Panadería', description: 'Pan, pasteles, galletas y productos horneados' },
-  { id: 'cat-meat', name: 'Carnes', description: 'Carnes frescas, embutidos y productos cárnicos' },
-  { id: 'cat-fruits', name: 'Frutas y Verduras', description: 'Productos frescos, frutas y vegetales' },
-  { id: 'cat-cleaning', name: 'Limpieza', description: 'Productos de limpieza y cuidado del hogar' },
-  { id: 'cat-personal', name: 'Cuidado Personal', description: 'Higiene personal y cuidado corporal' },
-  { id: 'cat-frozen', name: 'Congelados', description: 'Productos congelados y helados' },
-  { id: 'cat-canned', name: 'Enlatados', description: 'Conservas, enlatados y productos no perecederos' }
-];
+// Load data from your database export
+const initialCategories: Category[] = databaseData.categories || [];
 
 const initialProducts: Product[] = [
   // Bebidas
@@ -569,22 +559,8 @@ const initialProducts: Product[] = [
     sku: 'ENL-003',
     minStock: 18,
     image: 'https://images.pexels.com/photos/6287334/pexels-photo-6287334.jpeg?auto=compress&cs=tinysrgb&w=400',
-    price: 25.00,
-    barcode: '7501055341041'
-  },
-  {
-    id: uuidv4(),
-    name: 'Chiles Jalapeños 220g',
-    description: 'Chiles jalapeños en escabeche',
-    categoryId: 'cat-canned',
-    sku: 'ENL-004',
-    minStock: 15,
-    image: 'https://images.pexels.com/photos/6287378/pexels-photo-6287378.jpeg?auto=compress&cs=tinysrgb&w=400',
-    price: 22.00,
-    barcode: '7501055342042'
-  }
-];
-const initialTransactions: InventoryTransaction[] = [];
+const initialProducts: Product[] = databaseData.products || [];
+const initialTransactions: InventoryTransaction[] = databaseData.transactions || [];
 
 export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [categories, setCategories] = useState<Category[]>(() => {
