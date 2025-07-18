@@ -83,7 +83,7 @@ const Login: React.FC = () => {
           Sistema de Control de Inventario
         </p>
         <p className="mt-1 text-center text-xs text-indigo-600 font-medium">
-          🔥 Conectado con Firebase
+           Conectado con Firebase
         </p>
       </div>
 
