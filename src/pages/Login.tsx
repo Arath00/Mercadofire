@@ -13,6 +13,25 @@ const Login: React.FC = () => {
   const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
+  // Auto-login para desarrollo/testing
+  const handleAutoLogin = async () => {
+    setLoading(true);
+    try {
+      const success = await login('nuevo@gmail.com', '123456');
+      if (success) {
+        toast.success('¡Login automático exitoso!');
+        navigate('/');
+      } else {
+        toast.error('Error en login automático');
+      }
+    } catch (error) {
+      toast.error('Error en login automático');
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Redirigir si ya está autenticado
   React.useEffect(() => {
     if (isAuthenticated) {
@@ -153,6 +172,17 @@ const Login: React.FC = () => {
               </button>
             </div>
           </form>
+          
+          {/* Botón de Auto-Login para desarrollo */}
+          <div className="mt-4">
+            <button
+              onClick={handleAutoLogin}
+              disabled={loading}
+              className="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all duration-200"
+            >
+              🤖 Auto-Login (Desarrollo)
+            </button>
+          </div>
           
           {/* Link para ir al registro */}
           <div className="mt-6">
