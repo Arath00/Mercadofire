@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useInventory, InventoryMethod } from '../contexts/InventoryContext';
 import { PieChart, Printer, Download, FileText, Filter } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 const Reports: React.FC = () => {
   const { products, calculateInventoryCost, getProductTransactions } = useInventory();
@@ -38,6 +39,80 @@ const Reports: React.FC = () => {
   
   const handlePrint = () => {
     window.print();
+  };
+  
+  const handleExportToExcel = () => {
+    if (!showReport || !reportData) {
+      return;
+    }
+
+    // Crear un nuevo workbook
+    const workbook = XLSX.utils.book_new();
+    
+    // Datos del resumen
+    const summaryData = [
+      ['REPORTE DE INVENTARIO'],
+      [''],
+      ['Producto:', getProductName(productId)],
+      ['Método de Valuación:', 
+        inventoryMethod === 'PEPS' ? 'Primeras Entradas, Primeras Salidas' :
+        inventoryMethod === 'UEPS' ? 'Últimas Entradas, Primeras Salidas' :
+        'Costo Promedio Ponderado'
+      ],
+      ['Período:', `${new Date(startDate).toLocaleDateString()} - ${new Date(endDate).toLocaleDateString()}`],
+      ['Fecha de Generación:', new Date().toLocaleDateString()],
+      [''],
+      ['RESUMEN'],
+      ['Stock Final:', reportData.remainingStock + ' unidades'],
+      ['Costo Total:', '$' + reportData.totalCost.toFixed(2)],
+      ['Costo Unitario Promedio:', '$' + reportData.averageCost.toFixed(2)],
+      ['']
+    ];
+
+    // Crear hoja de resumen
+    const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
+    XLSX.utils.book_append_sheet(workbook, summarySheet, 'Resumen');
+
+    // Datos de entradas
+    if (reportData.entries.length > 0) {
+      const entriesData = [
+        ['ENTRADAS'],
+        [''],
+        ['Fecha', 'Cantidad', 'Costo Unitario', 'Costo Total'],
+        ...reportData.entries.map(entry => [
+          new Date(entry.date).toLocaleDateString(),
+          entry.quantity,
+          '$' + entry.unitCost.toFixed(2),
+          '$' + (entry.quantity * entry.unitCost).toFixed(2)
+        ])
+      ];
+      
+      const entriesSheet = XLSX.utils.aoa_to_sheet(entriesData);
+      XLSX.utils.book_append_sheet(workbook, entriesSheet, 'Entradas');
+    }
+
+    // Datos de salidas
+    if (reportData.exits.length > 0) {
+      const exitsData = [
+        ['SALIDAS'],
+        [''],
+        ['Fecha', 'Cantidad', 'Costo Calculado'],
+        ...reportData.exits.map(exit => [
+          new Date(exit.date).toLocaleDateString(),
+          exit.quantity,
+          '$' + (exit.quantity * reportData.averageCost).toFixed(2)
+        ])
+      ];
+      
+      const exitsSheet = XLSX.utils.aoa_to_sheet(exitsData);
+      XLSX.utils.book_append_sheet(workbook, exitsSheet, 'Salidas');
+    }
+
+    // Generar nombre del archivo
+    const fileName = `Reporte_${getProductName(productId).replace(/\s+/g, '_')}_${startDate}_${endDate}.xlsx`;
+    
+    // Descargar el archivo
+    XLSX.writeFile(workbook, fileName);
   };
   
   // Obtener el nombre del producto por ID
@@ -164,6 +239,7 @@ const Reports: React.FC = () => {
               </button>
               
               <button
+                onClick={handleExportToExcel}
                 disabled={!showReport}
                 className={`flex items-center w-full px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
                   !showReport ? 'opacity-50 cursor-not-allowed' : ''
