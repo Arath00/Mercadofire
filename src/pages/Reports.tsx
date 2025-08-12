@@ -307,92 +307,172 @@ const Reports: React.FC = () => {
             </div>
             
             {/* Entries */}
-            <div className="mb-6">
-              <h3 className="text-md font-medium text-gray-900 mb-3">Entradas</h3>
-              {reportData.entries.length > 0 ? (
+            {/* Kardex Table for PEPS */}
+            {inventoryMethod === 'PEPS' && reportData.kardexData ? (
+              <div className="mb-6">
+                <h3 className="text-md font-medium text-gray-900 mb-3">Kardex - Control de Inventario PEPS</h3>
                 <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
+                  <table className="min-w-full divide-y divide-gray-200 border">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <th rowSpan={2} className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r">
                           Fecha
                         </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Cantidad
+                        <th colSpan={3} className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r bg-green-50">
+                          Compras
                         </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Costo Unitario
+                        <th colSpan={3} className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider border-r bg-red-50">
+                          Ventas
                         </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Costo Total
+                        <th colSpan={3} className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider bg-blue-50">
+                          Saldos
                         </th>
+                      </tr>
+                      <tr>
+                        <th className="px-2 py-2 text-xs font-medium text-gray-500 uppercase border-r">Cantidad</th>
+                        <th className="px-2 py-2 text-xs font-medium text-gray-500 uppercase border-r">Costo Unit.</th>
+                        <th className="px-2 py-2 text-xs font-medium text-gray-500 uppercase border-r">Costo Total</th>
+                        <th className="px-2 py-2 text-xs font-medium text-gray-500 uppercase border-r">Cantidad</th>
+                        <th className="px-2 py-2 text-xs font-medium text-gray-500 uppercase border-r">Costo Unit.</th>
+                        <th className="px-2 py-2 text-xs font-medium text-gray-500 uppercase border-r">Costo Total</th>
+                        <th className="px-2 py-2 text-xs font-medium text-gray-500 uppercase border-r">Cantidad</th>
+                        <th className="px-2 py-2 text-xs font-medium text-gray-500 uppercase border-r">Costo Unit.</th>
+                        <th className="px-2 py-2 text-xs font-medium text-gray-500 uppercase">Costo Total</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
-                      {reportData.entries.map((entry) => (
-                        <tr key={entry.id}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {new Date(entry.date).toLocaleDateString()}
+                      {reportData.kardexData.map((row, index) => (
+                        <tr key={index} className="hover:bg-gray-50">
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900 border-r">
+                            {new Date(row.fecha).toLocaleDateString()}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {entry.quantity}
+                          {/* Compras */}
+                          <td className="px-2 py-3 whitespace-nowrap text-sm text-gray-900 text-center border-r bg-green-25">
+                            {row.compras.cantidad || '-'}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            ${entry.unitCost.toFixed(2)}
+                          <td className="px-2 py-3 whitespace-nowrap text-sm text-gray-900 text-right border-r bg-green-25">
+                            {row.compras.costoUnitario ? `$${row.compras.costoUnitario.toFixed(2)}` : '-'}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            ${(entry.quantity * entry.unitCost).toFixed(2)}
+                          <td className="px-2 py-3 whitespace-nowrap text-sm text-gray-900 text-right border-r bg-green-25">
+                            {row.compras.costoTotal ? `$${row.compras.costoTotal.toFixed(2)}` : '-'}
+                          </td>
+                          {/* Ventas */}
+                          <td className="px-2 py-3 whitespace-nowrap text-sm text-gray-900 text-center border-r bg-red-25">
+                            {row.ventas.cantidad || '-'}
+                          </td>
+                          <td className="px-2 py-3 whitespace-nowrap text-sm text-gray-900 text-right border-r bg-red-25">
+                            {row.ventas.costoUnitario ? `$${row.ventas.costoUnitario.toFixed(2)}` : '-'}
+                          </td>
+                          <td className="px-2 py-3 whitespace-nowrap text-sm text-gray-900 text-right border-r bg-red-25">
+                            {row.ventas.costoTotal ? `$${row.ventas.costoTotal.toFixed(2)}` : '-'}
+                          </td>
+                          {/* Saldos */}
+                          <td className="px-2 py-3 whitespace-nowrap text-sm font-medium text-gray-900 text-center border-r bg-blue-25">
+                            {row.saldos.cantidad}
+                          </td>
+                          <td className="px-2 py-3 whitespace-nowrap text-sm font-medium text-gray-900 text-right border-r bg-blue-25">
+                            ${row.saldos.costoUnitario.toFixed(2)}
+                          </td>
+                          <td className="px-2 py-3 whitespace-nowrap text-sm font-medium text-gray-900 text-right bg-blue-25">
+                            ${row.saldos.costoTotal.toFixed(2)}
                           </td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
-              ) : (
-                <p className="text-gray-500">No hay entradas en el período seleccionado</p>
-              )}
-            </div>
-            
-            {/* Exits */}
-            <div>
-              <h3 className="text-md font-medium text-gray-900 mb-3">Salidas</h3>
-              {reportData.exits.length > 0 ? (
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-gray-200">
-                    <thead className="bg-gray-50">
-                      <tr>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Fecha
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Cantidad
-                        </th>
-                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Costo Calculado
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="bg-white divide-y divide-gray-200">
-                      {reportData.exits.map((exit) => (
-                        <tr key={exit.id}>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {new Date(exit.date).toLocaleDateString()}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {exit.quantity}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            ${(exit.quantity * reportData.averageCost).toFixed(2)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+              </div>
+            ) : (
+              <>
+                {/* Traditional format for other methods */}
+                <div className="mb-6">
+                  <h3 className="text-md font-medium text-gray-900 mb-3">Entradas</h3>
+                  {reportData.entries.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Fecha
+                            </th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Cantidad
+                            </th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Costo Unitario
+                            </th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Costo Total
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {reportData.entries.map((entry) => (
+                            <tr key={entry.id}>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {new Date(entry.date).toLocaleDateString()}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {entry.quantity}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                ${entry.unitCost.toFixed(2)}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                ${(entry.quantity * entry.unitCost).toFixed(2)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="text-gray-500">No hay entradas en el período seleccionado</p>
+                  )}
                 </div>
-              ) : (
-                <p className="text-gray-500">No hay salidas en el período seleccionado</p>
-              )}
-            </div>
+                
+                {/* Exits */}
+                <div>
+                  <h3 className="text-md font-medium text-gray-900 mb-3">Salidas</h3>
+                  {reportData.exits.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Fecha
+                            </th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Cantidad
+                            </th>
+                            <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              Costo Calculado
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {reportData.exits.map((exit) => (
+                            <tr key={exit.id}>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {new Date(exit.date).toLocaleDateString()}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {exit.quantity}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                ${(exit.quantity * reportData.averageCost).toFixed(2)}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="text-gray-500">No hay salidas en el período seleccionado</p>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}
