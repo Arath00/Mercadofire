@@ -17,6 +17,7 @@ const Reports: React.FC = () => {
   const [reportData, setReportData] = useState<{
     entries: any[];
     exits: any[];
+    kardexData?: any[];
     remainingStock: number;
     totalCost: number;
     averageCost: number;

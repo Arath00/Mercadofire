@@ -227,46 +227,111 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const entries = filteredTransactions.filter((t) => t.type === 'entry');
     const exits = filteredTransactions.filter((t) => t.type === 'exit');
     
+    let kardexData: any[] = [];
     let remainingStock = 0;
     let totalCost = 0;
     let averageCost = 0;
     
     // Different calculation methods
     if (method === 'PEPS') {
-      // First In, First Out
-      const entriesQueue = [...entries].sort((a, b) => 
+      // PEPS - First In, First Out con formato Kardex
+      const allTransactions = [...filteredTransactions].sort((a, b) => 
         new Date(a.date).getTime() - new Date(b.date).getTime()
       );
       
-      let remainingEntries = [...entriesQueue];
+      let inventory: Array<{quantity: number, unitCost: number}> = [];
+      let runningStock = 0;
+      let runningValue = 0;
       
-      // Process exits
-      for (const exit of exits.sort((a, b) => 
-        new Date(a.date).getTime() - new Date(b.date).getTime()
-      )) {
-        let remainingExitQuantity = exit.quantity;
+      // Process each transaction chronologically
+      for (const transaction of allTransactions) {
+        let kardexRow: any = {
+          fecha: transaction.date,
+          compras: { cantidad: 0, costoUnitario: 0, costoTotal: 0 },
+          ventas: { cantidad: 0, costoUnitario: 0, costoTotal: 0 },
+          saldos: { cantidad: 0, costoUnitario: 0, costoTotal: 0 }
+        };
         
-        while (remainingExitQuantity > 0 && remainingEntries.length > 0) {
-          const oldestEntry = remainingEntries[0];
+        if (transaction.type === 'entry') {
+          // COMPRA
+          kardexRow.compras = {
+            cantidad: transaction.quantity,
+            costoUnitario: transaction.unitCost,
+            costoTotal: transaction.quantity * transaction.unitCost
+          };
           
-          if (oldestEntry.quantity <= remainingExitQuantity) {
-            // Use entire entry
-            remainingExitQuantity -= oldestEntry.quantity;
-            remainingEntries.shift();
-          } else {
-            // Use partial entry
-            remainingEntries[0] = {
-              ...oldestEntry,
-              quantity: oldestEntry.quantity - remainingExitQuantity,
-            };
-            remainingExitQuantity = 0;
+          // Add to inventory
+          inventory.push({
+            quantity: transaction.quantity,
+            unitCost: transaction.unitCost
+          });
+          
+          runningStock += transaction.quantity;
+          runningValue += transaction.quantity * transaction.unitCost;
+          
+        } else {
+          // VENTA
+          let remainingToSell = transaction.quantity;
+          let totalSaleCost = 0;
+          let weightedAverageCost = 0;
+          
+          // Calculate weighted average cost for this sale using PEPS
+          let tempInventory = [...inventory];
+          let tempRemaining = remainingToSell;
+          
+          while (tempRemaining > 0 && tempInventory.length > 0) {
+            const oldestBatch = tempInventory[0];
+            
+            if (oldestBatch.quantity <= tempRemaining) {
+              totalSaleCost += oldestBatch.quantity * oldestBatch.unitCost;
+              tempRemaining -= oldestBatch.quantity;
+              tempInventory.shift();
+            } else {
+              totalSaleCost += tempRemaining * oldestBatch.unitCost;
+              tempRemaining = 0;
+            }
+          }
+          
+          weightedAverageCost = remainingToSell > 0 ? totalSaleCost / remainingToSell : 0;
+          
+          kardexRow.ventas = {
+            cantidad: transaction.quantity,
+            costoUnitario: weightedAverageCost,
+            costoTotal: totalSaleCost
+          };
+          
+          // Remove from inventory using PEPS
+          while (remainingToSell > 0 && inventory.length > 0) {
+            const oldestBatch = inventory[0];
+            
+            if (oldestBatch.quantity <= remainingToSell) {
+              remainingToSell -= oldestBatch.quantity;
+              runningStock -= oldestBatch.quantity;
+              runningValue -= oldestBatch.quantity * oldestBatch.unitCost;
+              inventory.shift();
+            } else {
+              inventory[0].quantity -= remainingToSell;
+              runningStock -= remainingToSell;
+              runningValue -= remainingToSell * oldestBatch.unitCost;
+              remainingToSell = 0;
+            }
           }
         }
+        
+        // Calculate current average cost
+        const currentAverageCost = runningStock > 0 ? runningValue / runningStock : 0;
+        
+        kardexRow.saldos = {
+          cantidad: runningStock,
+          costoUnitario: currentAverageCost,
+          costoTotal: runningValue
+        };
+        
+        kardexData.push(kardexRow);
       }
       
-      // Calculate remaining stock and cost
-      remainingStock = remainingEntries.reduce((sum, entry) => sum + entry.quantity, 0);
-      totalCost = remainingEntries.reduce((sum, entry) => sum + (entry.quantity * entry.unitCost), 0);
+      remainingStock = runningStock;
+      totalCost = runningValue;
       averageCost = remainingStock > 0 ? totalCost / remainingStock : 0;
       
     } else if (method === 'UEPS') {
@@ -334,6 +399,7 @@ export const InventoryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return {
       entries,
       exits,
+      kardexData,
       remainingStock,
       totalCost,
       averageCost,
